@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+/lab2/object.h
+/lab2/scene.h
+lab2/scene.h
+lab2/scene.h

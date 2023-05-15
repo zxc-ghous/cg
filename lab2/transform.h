@@ -1,5 +1,4 @@
 #pragma once
-#include "common.h"
 #include <math.h>
 #include <vector>
 #include <SFML/Graphics.hpp>
@@ -7,50 +6,58 @@
 constexpr float TAU = 6.28318530718f;
 constexpr float EPSILON = 0.0000001f;
 
-struct alignas(4) Vec3 {
-    union {
-        struct {
-            float x;
-            float y;
-            float z;
-        };
-
-        float a[3];
+struct vec 
+{
+    struct 
+    {
+        float x;
+        float y;
+        float z;
     };
+    float a[3];
 
-    Vec3 operator - () {
-        return Vec3{ -x, -y, -z };
+
+    vec operator - () 
+    {
+        return vec{ -x, -y, -z };
     }
 
-    Vec3 operator + (Vec3 v) {
+    vec operator + (vec v) 
+    {
         return { x + v.x, y + v.y, z + v.z };
     }
 
-    void operator += (Vec3 v) {
-        self = self + v;
+    void operator += (vec v) 
+    {
+        (*this) = (*this) + v;
     }
 
-    static inline float euclidianDistance(Vec3 a, Vec3 b) {
+    static inline float euclidianDistance(vec a, vec b) 
+    {
         return sqrtf((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z));
     }
 
-    float norm() {
-        return Vec3::euclidianDistance(self, { 0, 0, 0 });
+    float norm() 
+    {
+        return vec::euclidianDistance((*this), { 0, 0, 0 });
     }
 
-    friend Vec3 operator * (float a, Vec3 v);
+    friend vec operator * (float a, vec v);
 
-    Vec3& normalize() {
-        self = (1.f / self.norm()) * self;
-        return self;
+    vec& normalize() 
+    {
+        (*this) = (1.f / (*this).norm()) * (*this);
+        return (*this);
     }
 
-    Vec3 normalized() {
-        return (1.f / self.norm()) * self;
+    vec normalized() 
+    {
+        return (1.f / (*this).norm()) * (*this);
     }
 };
 
-inline Vec3 operator * (float a, Vec3 v) {
+inline vec operator * (float a, vec v) 
+{
     return { a * v.x, a * v.y, a * v.z };
 }
 
@@ -58,33 +65,40 @@ struct Transform {
     float mat[16];
     Transform();
     Transform(Transform const&) = default;
-    Transform& translate(Vec3);
-    Transform& scale(Vec3);
+    Transform& translate(vec);
+    Transform& scale(vec);
     Transform& rotateX(float, float);
     Transform& rotateY(float, float);
     Transform& rotateZ(float, float);
-    Transform& rotateX(float a) { return self.rotateX(cosf(a), sinf(a)); };
-    Transform& rotateY(float a) { return self.rotateY(cosf(a), sinf(a)); };
-    Transform& rotateZ(float a) { return self.rotateZ(cosf(a), sinf(a)); };
+    Transform& rotateX(float a) { return (*this).rotateX(cosf(a), sinf(a)); };
+    Transform& rotateY(float a) { return (*this).rotateY(cosf(a), sinf(a)); };
+    Transform& rotateZ(float a) { return (*this).rotateZ(cosf(a), sinf(a)); };
     Transform& operator *= (Transform const&);
-    void applyTo(float*, size_t);
-    void applyWith(float* __restrict, float* __restrict, size_t);
+    void applyTo(float* va, size_t n);
+    void applyWith(float* to, float* with, size_t n);
 };
 
-struct Camera {
-    Vec3 pos;
+struct Camera 
+{
+    vec pos;
     float zoom = 25.f;
-    //cam always points to world origin
-    //Vec3 dir;
+    void setPos(float x_, float y_, float z_)
+    {
+        pos.x = x_;
+        pos.y = y_;
+        pos.z = z_;
+    }
 };
 
-struct Screen {
+struct Screen 
+{
     unsigned width;
     unsigned height;
 };
 
 Transform worldToView(Camera);
-void perspectiveProj(float* __restrict, float* __restrict, Camera, size_t);
-void parallelProj(float* __restrict, float* __restrict, size_t);
-void pictureToScreen(float* __restrict, float* __restrict, size_t, Screen, float); //картину на экран
-void flattenIVA(sf::Vertex* __restrict, float* __restrict, int* __restrict, size_t);
+void perspectiveProj(float* pp, float* va, Camera, size_t);
+void parallelProj(float* pp, float* va, size_t);
+void pictureToScreen(float* screenSpace, float* pictureSpace, size_t vertexCount, Screen screen, float); //картину на экран
+void flattenIVA(sf::Vertex* finalVA, float* screenSpace, int* ia, size_t segmentCount);
+

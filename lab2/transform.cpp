@@ -73,7 +73,7 @@ Transform& Transform::operator *= (Transform const& b) {
     return *this;
 }
 
-void Transform::apply_to(float* va, size_t n) { //va - vertex array, плоский массив по трем координатам, точка имеет 3 компоненты
+void Transform::applyTo(float* va, size_t n) { //va - vertex array, плоский массив по трем координатам, точка имеет 3 компоненты
     for (size_t i = 0; i < n * 3; i += 3) {
         vec v{ va[i], va[i + 1], va[i + 2] };
         va[i] = v.x * mat[0] + v.y * mat[4] + v.z * mat[8] + 1.f * mat[12];
@@ -82,7 +82,7 @@ void Transform::apply_to(float* va, size_t n) { //va - vertex array, плоский мас
     }
 }
 
-void Transform::apply_with(float*  to, float*  with, size_t n) { //with буфер не меняется, в to записываем
+void Transform::applyWith(float*  to, float*  with, size_t n) { //with буфер не меняется, в to записываем
     for (size_t i = 0; i < n * 3; i += 3) {
         vec v{ with[i], with[i + 1], with[i + 2] };
         to[i] = v.x * mat[0] + v.y * mat[4] + v.z * mat[8] + 1.f * mat[12];
@@ -92,7 +92,7 @@ void Transform::apply_with(float*  to, float*  with, size_t n) { //with буфер не
 }
 
 
-Transform world_to_view_space(Camera cam) {
+Transform worldToView(Camera cam) {
     float d;
 
     /* 1..3 */
@@ -141,7 +141,7 @@ Transform world_to_view_space(Camera cam) {
     return viewTransform;
 }
 
-void perspective_projection(float*  pp, float*  va, Camera camera, size_t n) {
+void perspectiveProj(float*  pp, float*  va, Camera camera, size_t n) {
     float s = vec::euclidianDistance(camera.pos, { 0.f, 0.f, 0.f });
     for (size_t i = 0; i < n; i += 1) {
         pp[2 * i + 0] = va[3 * i + 0] * (s / va[3 * i + 2]);
@@ -149,21 +149,21 @@ void perspective_projection(float*  pp, float*  va, Camera camera, size_t n) {
     }
 }
 
-void parallel_projection(float*  pp, float*  va, size_t n) {
+void parallelProj(float*  pp, float*  va, size_t n) {
     for (size_t i = 0; i < n; i += 1) {
         pp[2 * i + 0] = va[3 * i + 0];
         pp[2 * i + 1] = va[3 * i + 1];
     }
 }
 
-void picture_to_screen_space(float*  screenSpace, float*  pictureSpace, size_t vertexCount, Screen screen, float zoom) {
+void pictureToScreen(float*  screenSpace, float*  pictureSpace, size_t vertexCount, Screen screen, float zoom) {
     for (size_t i = 0; i < vertexCount; i += 1) {
         screenSpace[2 * i + 0] = pictureSpace[2 * i + 0] * zoom + screen.width / 2.f;
         screenSpace[2 * i + 1] = -pictureSpace[2 * i + 1] * zoom + screen.height / 2.f;
     }
 }
 
-void expand_to_final_vertex_array(sf::Vertex*  finalVA, float*  screenSpace, int*  ia, size_t segmentCount) { //в большой массив с вертексами
+void flattenIVA(sf::Vertex*  finalVA, float*  screenSpace, int*  ia, size_t segmentCount) { //в большой массив с вертексами
     for (size_t i = 0; i < segmentCount; i += 1) {
         finalVA[2 * i + 0] = sf::Vertex{
             sf::Vector2f {

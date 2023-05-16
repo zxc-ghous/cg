@@ -1,7 +1,6 @@
+#include "transform.h"
 #include <iostream>
 #include <SFML/Graphics.hpp>
-#include <SFML/System.hpp>
-#include "transform.h"
 
 float figureVer[]{
     3.f, -2.f, 0.f,     //0
@@ -46,6 +45,32 @@ sf::Vertex* finalVA = (sf::Vertex*)malloc((segmentCount * 2) * sizeof(sf::Vertex
 Screen screen{ 800, 600 };
 Camera camera{ {6, 6, 6} };
 
+struct CameraController 
+{
+    Camera& cam = ::camera;
+    float dragSpeed = 0.0000008f;
+    float pitchThreshold = 2.f;
+    float zoomSpeed = 0.8f;
+    struct { int x, y; } prevCurPos{ 0, 0 };
+
+    void dragCamera(float dx, float dy) 
+    {
+
+        Transform{}.rotateZ(dx * dragSpeed).applyTo(&cam.pos.x, 1);
+
+        float d = hypotf(cam.pos.x, cam.pos.y);
+
+        if ((d > pitchThreshold) || (cam.pos.z > 0 && dy < 0) || (cam.pos.z < 0 && dy > 0)) {
+            float cosu = cam.pos.y / d;
+            float sinu = cam.pos.x / d;
+            Transform{}
+                .rotateZ(cosu, -sinu)
+                .rotateX(-dy * dragSpeed)
+                .rotateZ(cosu, sinu)
+                .applyTo(&cam.pos.x, 1);
+        }
+    }
+} camController;
 
 int main() 
 {
@@ -60,8 +85,6 @@ int main()
     } 
     projection = Projection::Perspective;
 
-    sf::Clock clock {};
-    float dt = 0;
 
     while (window.isOpen()) 
     {
@@ -87,6 +110,18 @@ int main()
                         }
                         break;
 
+                        case sf::Keyboard::Q:
+                        {
+                            camController.cam.zoom -= camController.zoomSpeed;
+                        }
+                        break;
+
+                        case sf::Keyboard::E:
+                        {
+                            camController.cam.zoom += camController.zoomSpeed;
+                        }
+                        break;
+
                         case sf::Keyboard::S:
                         {
                             float x, y, z;
@@ -101,16 +136,16 @@ int main()
             }
         }
 
-        Transform {}.rotateZ(dt * 0.0000005f).apply_to(&camera.pos.x, 1);
+        camController.dragCamera(100, 0.f);
 
-        world_to_view_space(camera).apply_with(viewSpace, figureVer, vertexCount);
+        worldToView(camera).applyWith(viewSpace, figureVer, vertexCount);
 
         switch (projection) 
         {
             case Projection::Perspective: 
                 {
                     if (show_once) std::cout << "Perspective" << std::endl;
-                    perspective_projection(pictureSpace, viewSpace, camera, vertexCount);
+                    perspectiveProj(pictureSpace, viewSpace, camera, vertexCount);
                     show_once = false;
                 } 
                 break;
@@ -118,23 +153,23 @@ int main()
             case Projection::Parallel: 
                 {
                     if (show_once) std::cout << "Parallel" << std::endl;
-                    parallel_projection(pictureSpace, viewSpace, vertexCount);
+                    parallelProj(pictureSpace, viewSpace, vertexCount);
                     show_once = false;
                 } 
                 break;
         }
 
-        picture_to_screen_space(screenSpace, pictureSpace, vertexCount, screen, camera.zoom);
-        expand_to_final_vertex_array(finalVA, screenSpace, figureReb, segmentCount);
+        pictureToScreen(screenSpace, pictureSpace, vertexCount, screen, camera.zoom);
+        flattenIVA(finalVA, screenSpace, figureReb, segmentCount);
        
-        finalVA[0].color = sf::Color::Green;
-        finalVA[1].color = sf::Color::Green;
+        for (int i = 0; i < segmentCount; i ++)
+        {
+            finalVA[i].color = sf::Color::Red;
+        }
 
         window.clear();
         window.draw(finalVA, segmentCount * 2, sf::Lines);
         window.display();
-
-        dt = (float) clock.restart().asMicroseconds();
 
     }
 

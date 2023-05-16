@@ -74,14 +74,14 @@ struct Transform {
     Transform& rotateY(float a) { return (*this).rotateY(cosf(a), sinf(a)); };
     Transform& rotateZ(float a) { return (*this).rotateZ(cosf(a), sinf(a)); };
     Transform& operator *= (Transform const&);
-    void applyTo(float* va, size_t n);
-    void applyWith(float* to, float* with, size_t n);
+    void apply_to(float* va, size_t n);
+    void apply_with(float* to, float* with, size_t n);
 };
 
 struct Camera 
 {
     vec pos;
-    float zoom = 25.f;
+    float zoom = 35.f;
     void setPos(float x_, float y_, float z_)
     {
         pos.x = x_;
@@ -96,9 +96,9 @@ struct Screen
     unsigned height;
 };
 
-Transform worldToView(Camera);
-void perspectiveProj(float* pp, float* va, Camera, size_t);
-void parallelProj(float* pp, float* va, size_t);
-void pictureToScreen(float* screenSpace, float* pictureSpace, size_t vertexCount, Screen screen, float); //картину на экран
-void flattenIVA(sf::Vertex* finalVA, float* screenSpace, int* ia, size_t segmentCount);
+Transform world_to_view_space(Camera);
+void perspective_projection(float* pp, float* va, Camera, size_t);
+void parallel_projection(float* pp, float* va, size_t);
+void picture_to_screen_space(float* screenSpace, float* pictureSpace, size_t vertexCount, Screen screen, float); //картину на экран
+void expand_to_final_vertex_array(sf::Vertex* finalVA, float* screenSpace, int* ia, size_t segmentCount);
 

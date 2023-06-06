@@ -9,7 +9,7 @@ Transform::Transform() : mat{
     0.f, 0.f, 0.f, 1.f
 } {}
 
-Transform& Transform::translate(vec v) {
+Transform& Transform::translate(vec3 v) {
     auto shift = Transform{};
     shift.mat[12] = v.x;
     shift.mat[13] = v.y;
@@ -18,7 +18,7 @@ Transform& Transform::translate(vec v) {
     return (*this) *= shift;
 }
 
-Transform& Transform::scale(vec v) {
+Transform& Transform::scale(vec3 v) {
     auto scale = Transform{};
     scale.mat[0] = v.x;
     scale.mat[5] = v.y;
@@ -74,7 +74,7 @@ Transform& Transform::operator *= (Transform const& b) {
 
 void Transform::transformTo(float* va, size_t n) { //va - vertex array, плоский массив по трем координатам, точка имеет 3 компоненты
     for (size_t i = 0; i < n * 3; i += 3) {
-        vec v{ va[i], va[i + 1], va[i + 2] };
+        vec3 v{ va[i], va[i + 1], va[i + 2] };
         va[i] = v.x * mat[0] + v.y * mat[4] + v.z * mat[8] + 1.f * mat[12];
         va[i + 1] = v.x * mat[1] + v.y * mat[5] + v.z * mat[9] + 1.f * mat[13];
         va[i + 2] = v.x * mat[2] + v.y * mat[6] + v.z * mat[10] + 1.f * mat[14];
@@ -83,7 +83,7 @@ void Transform::transformTo(float* va, size_t n) { //va - vertex array, плоский 
 
 void Transform::transformWith(float*  to, float*  with, size_t n) { //with буфер не меняется, в to записываем
     for (size_t i = 0; i < n * 3; i += 3) {
-        vec v{ with[i], with[i + 1], with[i + 2] };
+        vec3 v{ with[i], with[i + 1], with[i + 2] };
         to[i] = v.x * mat[0] + v.y * mat[4] + v.z * mat[8] + 1.f * mat[12];
         to[i + 1] = v.x * mat[1] + v.y * mat[5] + v.z * mat[9] + 1.f * mat[13];
         to[i + 2] = v.x * mat[2] + v.y * mat[6] + v.z * mat[10] + 1.f * mat[14];
@@ -141,7 +141,7 @@ Transform worldToView(Camera cam) {
 }
 
 void perspectiveProj(float*  pp, float*  va, Camera camera, size_t n) {
-    float s = vec::euclidianDistance(camera.pos, { 0.f, 0.f, 0.f });
+    float s = vec3::euclidianDistance(camera.pos, { 0.f, 0.f, 0.f });
     for (size_t i = 0; i < n; i += 1) {
         pp[2 * i + 0] = va[3 * i + 0] * (s / va[3 * i + 2]);
         pp[2 * i + 1] = va[3 * i + 1] * (s / va[3 * i + 2]);
